@@ -1,0 +1,42 @@
+Column Family
+-  Row Key : Row식별자. Row Key값순으로 자동 정렬됨. 검색시 사용되는 기본 키
+-  Column : 키-값 쌍. 하나의 Row에 수백만~수억개의 칼럼을 허용한다. 항상 Timestamp 값이 함께 저장됨. 
+- Column의 값이 다시 여러개의 Column의 Map으로 구성되어 있으면 Column Family라고 부름. 
+- Cassandra에서는 Super Column 이라는 용어를 씀.
+
+-------------------------------------------------
+Cassandra	      ｜     HBase            RDB
+-------------------------------------------------
+keyspace	      ｜     없음	         Database
+-------------------------------------------------
+column family	  ｜     table           table
+-------------------------------------------------
+row key	        ｜   row key	    PK(Primary Key)
+-------------------------------------------------
+column name/key ｜  column name	    column name
+-------------------------------------------------
+
+
+대표적인 DB
+HBase : Hadoop의 HDFS를 저장소로 사용함. 
+  - Master-Slave 구조 : Master가 데이터 일관성을 보장 
+  - Master가 장애 발생시 접근 불가 → HA 구성으로 해결
+  - 1개 node에 쓰기가 집중되는 현상(hot spot) 발생 ☞ 쓰기성능 ↓ 
+  - hotspot을 해결하기 위한 작업때문에 performance가 또 떨어짐
+  - raw key로 정렬 가능
+
+Cassandra : Ring 구조의 Multi Master 복제 지원 
+  - 모든 노드가 동일한 역할 수행 : 일관성의 문제 발생 가능성 
+  - 확장성은 대단히 뛰어남
+  - 쓰기성능 ↑
+  - equal query 성능 매우 좋음.
+  - raw key로 정렬 불가능.
+  - Netflix에서는 file을 쪼개서 binary형태로 cassandra에 저장하여 효과적으로 사용.
+
+Map/Reduce 기능 
+- Hadoop과 통합하여 Map/Reduce를 제공
+  - HBase는 Hadoop과 밀접하게 통합되어 있음.
+  - Cassandra는 Hadoop과의 통합을 위한 SDK를 별도로 제공 
+- Hadoop, Spark와의 통합 지원
+  - Cassandra : (Colum Family, CQL) ←→ (Hive, Pig), Hive, Spark 
+  - HBase : Hive, Pig, Tajo, Impala, Spark 
