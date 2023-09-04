@@ -1,0 +1,54 @@
+MongoDB에서 사용하는 JSON vs BSON
+몽고DB는 Document로 데이터를 관리하고 있다.
+이때 우리 눈으로 데이터를 받아보면 모두 JSON형태로 데이터를 보여주고, 저장한다. 또 검색기능을 사용할 때에도 JSON문법에 맞게 입력해준다.
+하지만 정확히 몽고DB에서는 데이터를 BSON형태로 저장하여 사용하고 있다.
+
+ 
+JSON 형식
+일반적으로 JSON은 JavaScript Object Notation의 줄임말로 Javascript 언어의 일부로 정의되어있는 형식이며 2013년에 공식화 된 형식이다.
+JSON의 형태는 일반적으로 key와 value의 값으로 채워져 있다.
+직관적이고 간단한 특성으로 쉽게 이해할 수 있는 형태의 표현 방법이다.
+
+예)
+JSON
+{
+	"_id": "10009999",
+	"listing_url": "https://www.aaabbb.com/rooms/10009999",
+	"name": "Horto flat with small garden",
+	"summary": "One bedroom + sofa-bed ...",
+	"cancellation_policy": "flexible",
+	"last_scraped": {
+		"$date": {
+			"$numberLong": "1549861200000"
+		}
+	}
+}
+ 
+
+BSON 형식
+BSON은 단순히 말하면 Binary JSON이다.
+JSON과 동일한 구조지만 Binary 형태로 변경된 구조를 말한다.
+그럼 JSON이 있는데 왜 BSON이 등장한 것일까?
+
+몽고DB가 처음 개발될 때에는 JSON을 이용해서 개발을 진행했다고 한다. 그러다가 문제점 몇가지가 나타나기 시작한 것이다.
+
+JSON은 텍스트 기반으로 구문 분석이 매우 느리다.
+JSON은 공간 효율성과는 거리가 멀다. (데이터베이스 문제)
+이 외에도 여러가지 문제가 발생하여 고안해 낸것이 바로 BJSON 인 것이다.
+
+JSON구조의 좋은점은 그대로 가져가면서 기계가 빠르게 읽을 수 있는 binary 형태로 변경하여 저장을 한 것이다.
+
+ 
+동일한 형태로 사람에게 보여질 때에는 JSON의 형태로 보여주고, 저장할 때나 네트워크로 전송할 때에는 BSON 형태로 만들어서 저장 또는 전송한다.
+
+예)
+JSON
+{"hello": "world"} 
+
+→       \x16\x00\x00\x00           // total document size
+        \x02                       // 0x02 = type String
+        hello\x00                  // field name
+        \x06\x00\x00\x00world\x00  // field value
+        \x00                       // 0x00 = type EOO ('end of object')
+또한 JSON에서는 표현할 수 있는 방법이 문자열, boolean, 숫자, 배열 뿐이다.
+그에 반해 BSON에서는 조금 더 디테일하게 표현할 수 있다. 예를들어서 숫자의 경우도 Integer, Float, Long, Decimal과 같이 분류가 되며 날짜의 형태도 저장이 가능하다.
