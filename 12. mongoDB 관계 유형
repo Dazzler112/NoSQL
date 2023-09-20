@@ -1,0 +1,179 @@
+몽고디비 관계 유형
+ 
+
+One-to-One 방식
+단순한 1:1 관계이다.
+
+RDBMS는 테이블을 나누어서 표현했지만, NOSQL은 하나의 다큐먼트에 그대로 표현이 가능하다.
+예)
+     직원TABLE
+ emp_id   emp_name
+  1001     홍길동
+  1002     이몽룡
+  1003     성춘향
+        ｜
+        ｜
+        ｜
+    주민번호TABLE
+  reg_number     emp_id
+111111-1111111    1001    
+222222-1222222    1002
+333333-2311111    1003
+예 그림설명)RDBMS 1:1 테이블의예
+
+--------------------------------------------------------------------------------------------------------------------------------
+// 두개의 테이블로 나누어 1:1 관계를 맺는게 아니라, 몽고디비는 그냥 도큐먼트에 키값을 저장해버리면 된다.
+{
+  "emp_id" : 1001,
+  "emp_name" : "홍길동", 
+  "reg_number" : "111111-1111111"
+}
+--------------------------------------------------------------------------------------------------------------------------------
+ 
+
+One-to-Many 방식
+1:N 관계 이며 여기서 위에서 배운 몽고디비 관계 데이터 2가지 방식에 따라 장단점이 갈리게 된다.
+다음과 같이 1개의 Publisher Document 와 2개의 Book Document 가 있다고 가정하자.
+Embedded 방식으로 했을 때,위에서 배운바와 같이 데이터 구조는 Book.publisher의 value 에 Publisher 데이터가 통째로 저장되게 된다.
+가장 단순한 기법이지만 중복 데이터가 발생해 쓸데없이 도큐먼트 크기가 커진다는 단점이 있다.
+
+--------------------------------------------------------------------------------------------------------------------------------
+/* *** Publisher 컬렉션 *** */
+
+// Publisher 1 다큐먼트
+{
+   _id: "oreilly",
+   name: "O'Reilly Media",
+   founded: 1980,
+   location: "CA"
+}
+--------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------
+/* *** Book 컬렉션 *** */
+
+// Book 1 다큐먼트
+{
+   _id: 123456789,
+   title: "MongoDB: The Definitive Guide",
+   author: [ "Kristina Chodorow", "Mike Dirolf" ],
+   published_date: ISODate("2010-09-24"),
+   pages: 216,
+   language: "English",
+
+   publisher: { // 통째로 그대로 저장되어있다. 중복 발생
+      name: "O'Reilly Media",
+      founded: 1980,
+      location: "CA"
+   }
+}
+
+// Book 2 다큐먼트
+{
+   _id: 234567890,
+   title: "50 Tips and Tricks for MongoDB Developer",
+   author: "Kristina Chodorow",
+   published_date: ISODate("2011-05-06"),
+   pages: 68,
+   language: "English",
+
+   publisher: { // 통째로 그대로 저장되어있다. 중복 발생
+      name: "O'Reilly Media",
+      founded: 1980,
+      location: "CA"
+   }
+}
+--------------------------------------------------------------------------------------------------------------------------------
+ 
+반면 Reference 방식으로 했을 때는 2개의 Book.publisher_id 의 value 에 각각 Publisher._id의 value 만 저장되어 있게 된다.
+
+--------------------------------------------------------------------------------------------------------------------------------
+/* *** Publisher 컬렉션 *** */
+
+// Publisher 1 다큐먼트
+{
+   _id: "oreilly",
+   name: "O'Reilly Media",
+   founded: 1980,
+   location: "CA"
+}
+--------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------
+/* *** Book 컬렉션 *** */
+
+// Book 1 다큐먼트
+{
+   _id: 123456789,
+   title: "MongoDB: The Definitive Guide",
+   author: [ "Kristina Chodorow", "Mike Dirolf" ],
+   published_date: ISODate("2010-09-24"),
+   pages: 216,
+   language: "English",
+
+   publisher_id: "oreilly" // <- Publisher._id
+}
+
+// Book 2 다큐먼트
+{
+   _id: 234567890,
+   title: "50 Tips and Tricks for MongoDB Developer",
+   author: "Kristina Chodorow",
+   published_date: ISODate("2011-05-06"),
+   pages: 68,
+   language: "English",
+
+   publisher_id: "oreilly" // <- Publisher._id
+}
+--------------------------------------------------------------------------------------------------------------------------------
+ 
+
+Many-to-Many
+Many-to-Many 는 One-to-Many 관계에서 확장된 m:n 관계 유형이다.
+One-to-Many 에서 Publisher : Book = 1 : n 이었지만, Many-to-Many 는 m : n 이 가능한 구조이다. 
+아래 예시를 보시면 Book.publisher_id value 가 1개 이상의 Publisher.id를 참조하고 있는걸 볼 수 있다.
+
+--------------------------------------------------------------------------------------------------------------------------------
+/* *** Publisher 컬렉션 *** */
+
+// Publisher 1 다큐먼트
+{
+   _id: "oreilly",
+   name: "O'Reilly Media",
+   founded: 1980,
+   location: "CA"
+}
+
+// Publisher 2 다큐먼트
+{
+   _id: "devhak",
+   name: "devhak'Reilly Media",
+   founded: 1980,
+   location: "CA"
+}
+--------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------
+/* *** Book 컬렉션 *** */
+
+// Book 1 다큐먼트
+{
+   _id: 123456789,
+   title: "MongoDB: The Definitive Guide",
+   author: [ "Kristina Chodorow", "Mike Dirolf" ],
+   published_date: ISODate("2010-09-24"),
+   pages: 216,
+   language: "English",
+
+   publisher_id: ["oreilly", "devhak"] // <- Publisher._id 여러개 참조
+}
+
+// Book 2 다큐먼트
+{
+   _id: 234567890,
+   title: "50 Tips and Tricks for MongoDB Developer",
+   author: "Kristina Chodorow",
+   published_date: ISODate("2011-05-06"),
+   pages: 68,
+   language: "English",
+
+   publisher_id: ["oreilly", "devhak"] // <- Publisher._id 여러개 참조
+}
+--------------------------------------------------------------------------------------------------------------------------------
